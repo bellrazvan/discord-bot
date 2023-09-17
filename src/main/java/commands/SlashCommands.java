@@ -39,14 +39,19 @@ public class SlashCommands extends ListenerAdapter {
 
             try {
                 message = Objects.requireNonNull(event.getOption("message"))
-                        .getAsString();
-                ephemeral = Objects.requireNonNull(event.getOption("ephemeral"))
-                        .getAsBoolean();
-            } catch (Exception e) {
+                                                    .getAsString();
+            } catch (NullPointerException e) {
                 System.out.println("ERROR: " + e.getMessage());
                 event.reply("Cannot echo a null message.")
                         .setEphemeral(true)
                         .queue();
+            }
+
+            try {
+                ephemeral = Objects.requireNonNull(event.getOption("ephemeral"))
+                        .getAsBoolean();
+            } catch (NullPointerException e) {
+                System.out.println("ERROR: " + e.getMessage());
             }
 
             if (message != null) {
@@ -104,12 +109,19 @@ public class SlashCommands extends ListenerAdapter {
             }
 
         } else if (command.equals("joke")) {
-            boolean ephemeral = Objects.requireNonNull(event.getOption("ephemeral"))
-                                                        .getAsBoolean();
-            String category = Objects.requireNonNull(event.getOption("category"))
-                                                        .getAsString()
-                                                        .toLowerCase();
+            boolean ephemeral = false;
+            String category = "";
             Category type;
+
+            try {
+                ephemeral = Objects.requireNonNull(event.getOption("ephemeral"))
+                                                    .getAsBoolean();
+                category = Objects.requireNonNull(event.getOption("category"))
+                                                    .getAsString()
+                                                    .toLowerCase();
+            } catch (NullPointerException e) {
+                System.out.println("ERROR: " + e.getMessage());
+            }
 
             switch(category) {
                 case "dark":
