@@ -6,14 +6,17 @@ import net.dv8tion.jda.api.events.channel.ChannelCreateEvent;
 public class ChannelCreate extends ListenerAdapter {
     public void onChannelCreate(ChannelCreateEvent event) {
         String channelName = event.getChannel()
-                                .getName();
-        //fix this
-        event.getGuild()
-                .getDefaultChannel()
-                .asTextChannel()
-                .sendMessage("A new channel was created: " + channelName)
-                .queue();
+                                .getAsMention();
+        String channelType = event.getChannelType()
+                                .toString()
+                                .toLowerCase();
+        String message = "A new " + channelType + " channel was created: " + channelName;
 
+        event.getGuild()
+                .getTextChannels()
+                .get(0)
+                .sendMessage(message)
+                .queue();
     }
 
 }
