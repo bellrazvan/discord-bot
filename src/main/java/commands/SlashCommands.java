@@ -4,9 +4,9 @@ import bot.Bot;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -26,6 +26,7 @@ import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.List;
 import java.util.Objects;
 
 public class SlashCommands extends ListenerAdapter {
@@ -34,33 +35,25 @@ public class SlashCommands extends ListenerAdapter {
         String command = event.getName();
 
         if (command.equals("echo")) {
-            String message = null;
+            String message = Objects.requireNonNull(event.getOption("message"))
+                                                        .getAsString();
             boolean ephemeral = false;
 
             try {
-                message = Objects.requireNonNull(event.getOption("message"))
-                                                    .getAsString();
-            } catch (NullPointerException e) {
-                System.out.println("ERROR: " + e.getMessage());
-                event.reply("Cannot echo a null message.")
-                        .setEphemeral(true)
-                        .queue();
-            }
-
-            try {
                 ephemeral = Objects.requireNonNull(event.getOption("ephemeral"))
-                        .getAsBoolean();
-            } catch (NullPointerException e) {
-                System.out.println("ERROR: " + e.getMessage());
+                                                        .getAsBoolean();
+            } catch (NullPointerException ignored) {
+
             }
 
-            if (message != null) {
-                event.reply(message)
-                        .setEphemeral(ephemeral)
-                        .queue();
-            }
+            event.reply(message)
+                    .setEphemeral(ephemeral)
+                    .queue();
 
         } else if (command.equals("nasa")) {
+            event.deferReply()
+                    .queue();
+
             final String apiKey = Bot.getDotenv()
                                     .get("NASA_API_KEY");
 
@@ -70,7 +63,7 @@ public class SlashCommands extends ListenerAdapter {
                                             .GET()
                                             .build();
 
-            HttpResponse<String> response = null;
+            HttpResponse<String> response;
             JsonNode jsonNode = null;
             try {
                 response = client.send(request, HttpResponse.BodyHandlers.ofString());
@@ -79,16 +72,20 @@ public class SlashCommands extends ListenerAdapter {
                 jsonNode = mapper.readValue(responseBody, JsonNode.class);
             } catch (Exception e) {
                 System.out.println("ERROR: " + e.getMessage());
-                event.reply("Error: Something went wrong")
+                event.getHook()
+                        .sendMessage("Error: Something went wrong")
+                        .setEphemeral(true)
                         .queue();
             }
             assert jsonNode != null;
-            String photoUrl = jsonNode.get("url").asText();
-            String description = jsonNode.get("title").asText();
+            String photoUrl = jsonNode.get("url")
+                                        .asText();
+            String description = jsonNode.get("title")
+                                        .asText();
 
             //URL is deprecated, used uriObj.toURL() instead
-            URI uri = null;
-            URL url = null;
+            URI uri;
+            URL url;
             try {
                 uri = URI.create(photoUrl);
                 url = uri.toURL();
@@ -96,19 +93,24 @@ public class SlashCommands extends ListenerAdapter {
                 File photo = new File("temp.jpg");
                 ImageIO.write(img, "jpg", photo);
 
-                event.reply(description)
+                event.getHook()
+                        .sendMessage(description)
                         .queue();
                 event.getChannel()
                         .sendFiles(FileUpload.fromData(photo))
                         .queue();
-
             } catch (Exception e) {
-                System.out.println("ERROR: " + e.getMessage());
-                event.reply("Error: Something went wrong")
+                System.out.println("ERROR: " + e.getMessage() + "\nCouldn't convert video to image");
+                event.getHook()
+                        .sendMessage("Error: Something went wrong")
+                        .setEphemeral(true)
                         .queue();
             }
 
         } else if (command.equals("joke")) {
+            event.deferReply()
+                    .queue();
+
             boolean ephemeral = false;
             String category = "";
             Category type;
@@ -118,22 +120,22 @@ public class SlashCommands extends ListenerAdapter {
                                                     .getAsBoolean();
                 category = Objects.requireNonNull(event.getOption("category"))
                                                     .getAsString()
-                                                    .toLowerCase();
-            } catch (NullPointerException e) {
-                System.out.println("ERROR: " + e.getMessage());
+                                                    .toUpperCase();
+            } catch (NullPointerException ignored) {
+
             }
 
             switch(category) {
-                case "dark":
+                case "DARK":
                         type = Category.Dark;
                         break;
-                case "misc":
+                case "MISC":
                         type = Category.Misc;
                         break;
-                case "programming":
+                case "PROGRAMMING":
                         type = Category.Programming;
                         break;
-                case "pun":
+                case "PUN":
                         type = Category.Pun;
                         break;
                 default:
@@ -146,43 +148,73 @@ public class SlashCommands extends ListenerAdapter {
                                             .lang(Lang.en)
                                             .build();
             Joke joke = jokeApi.getJoke(filter);
-            event.reply(joke.jokeString())
+            event.getHook()
+                    .sendMessage(joke.jokeString())
                     .setEphemeral(ephemeral)
                     .queue();
 
         } else if (command.equals("welcome")) {
-            String userMention = Objects.requireNonNull(event.getMember())
-                                                            .getUser()
-                                                            .getAsMention();
-            event.reply("Welcome, " + userMention + "!").queue();
+            try {
+                String userMention = Objects.requireNonNull(event.getMember())
+                        .getUser()
+                        .getAsMention();
+                event.reply("Welcome, " + userMention + "!")
+                        .queue();
+            } catch (NullPointerException e) {
+                System.out.println("ERROR: Cannot find user");
+            }
+
+        } else if (command.equals("roles")) {
+            event.deferReply()
+                    .queue();
+
+            try {
+                StringBuilder output = new StringBuilder("Roles: \n");
+                List<Role> roleList = Objects.requireNonNull(event.getGuild()).getRoles();
+                for (Role role : roleList)
+                    output.append(role.getAsMention())
+                            .append("\n");
+
+                event.getHook()
+                        .sendMessage(output.toString())
+                        .queue();
+            } catch (NullPointerException e) {
+                event.getHook()
+                        .sendMessage("Error: Something went wrong")
+                        .setEphemeral(true)
+                        .queue();
+            }
+
         }
     }
 
+    //Guild command
     @Override
     public void onGuildReady(@NotNull GuildReadyEvent event) {
         Guild guild = event.getGuild();
 
-        guild.updateCommands().addCommands(Commands.slash("echo", "Repeats the messages you type.")
-                                    .addOption(OptionType.STRING, "message", "The message to repeat.")
+        guild.updateCommands().addCommands(
+                            Commands.slash("echo", "Repeats the message you type.")
+                                    .addOption(OptionType.STRING, "message", "The message to repeat.", true)
                                     .addOption(OptionType.BOOLEAN, "ephemeral", "Whether or not the message should be sent as an ephemeral message."),
-                            Commands.slash("nasa", "Displays NASA's astronomy photo of the day ."),
+                            Commands.slash("nasa", "Displays NASA's Astronomy Picture of the Day."),
                             Commands.slash("joke", "Displays a random joke.")
                                     .addOptions(
                                             new OptionData(OptionType.STRING, "category", "Choose the joke's category.")
-                                                    .addChoice("Any", "Any")
                                                     .addChoice("Dark", "Dark")
                                                     .addChoice("Misc", "Misc")
                                                     .addChoice("Programming", "Programming")
                                                     .addChoice("Pun", "Pun")
                                     )
                                     .addOption(OptionType.BOOLEAN, "ephemeral", "Whether or not the joke should be sent as an ephemeral message."),
-                            Commands.slash("welcome", "Get a welcome message.")
-
+                            Commands.slash("welcome", "Get a welcome message."),
+                            Commands.slash("roles", "Get a list with all the server's roles.")
         ).queue();
     }
 
-    @Override
-    public void onReady(@NotNull ReadyEvent event) {
-
-    }
+    ////Global command
+//    @Override
+//    public void onReady(@NotNull ReadyEvent event) {
+//
+//    }
 }

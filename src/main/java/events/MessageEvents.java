@@ -6,7 +6,6 @@ import net.dv8tion.jda.api.events.message.MessageDeleteEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.jetbrains.annotations.NotNull;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,29 +20,39 @@ public class MessageEvents extends ListenerAdapter {
                                     .getContentRaw()
                                     .split(" ");
 
-        String userMention = Objects.requireNonNull(event.getMember())
-                                                .getUser()
-                                                .getAsMention();
+        boolean containsGreeting = Arrays.stream(messageSent)
+                .anyMatch(str -> str.contains("hello")
+                        || str.contains("hi")
+                        || str.contains("hey"));
+        boolean mentionsBot = Arrays.stream(messageSent)
+                .anyMatch(str -> str.contains("bot"));
+
+        try {
+            String userMention = Objects.requireNonNull(event.getMember())
+                    .getUser()
+                    .getAsMention();
+
+            if(containsGreeting && mentionsBot) {
+                boolean isNotBot = !(event.getMember()
+                        .getUser()
+                        .isBot());
+                if (isNotBot) {
+                    event.getChannel()
+                            .sendMessage("Hello, " + userMention)
+                            .queue();
+                }
+            }
+        } catch (NullPointerException e) {
+            System.out.println("ERROR: " + e.getMessage());
+            if(containsGreeting && mentionsBot) {
+                    event.getChannel()
+                            .sendMessage("Hello!")
+                            .queue();
+                }
+        }
+
         Message message = event.getMessage();
         messageCache.put(message.getIdLong(), message);
-
-        boolean containsGreeting = Arrays.stream(messageSent)
-                                        .anyMatch(str -> str.contains("hello")
-                                                    || str.contains("hi")
-                                                    || str.contains("hey"));
-        boolean mentionsBot = Arrays.stream(messageSent)
-                                        .anyMatch(str -> str.contains("bot"));
-
-        if(containsGreeting && mentionsBot) {
-            boolean isNotBot = !(event.getMember()
-                                    .getUser()
-                                    .isBot());
-            if (isNotBot) {
-                event.getChannel()
-                        .sendMessage("Hello, " + userMention)
-                        .queue();
-            }
-        }
     }
 
     @Override

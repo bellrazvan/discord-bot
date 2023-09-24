@@ -7,7 +7,7 @@ public class ChannelCreate extends ListenerAdapter {
     public void onChannelCreate(ChannelCreateEvent event) {
         String channelName = event.getChannel()
                                 .getName();
-//repair
+        //fix this
         event.getGuild()
                 .getDefaultChannel()
                 .asTextChannel()

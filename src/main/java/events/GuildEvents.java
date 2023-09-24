@@ -14,10 +14,16 @@ import java.util.Objects;
 public class GuildEvents extends ListenerAdapter {
     @Override
     public void onGuildJoin(@NotNull GuildJoinEvent event) {
-        TextChannel textChannel = Objects.requireNonNull(event.getGuild()
-                                                            .getTextChannels()
-                                                            .get(0));
+        TextChannel textChannel = null;
+        try {
+            textChannel = Objects.requireNonNull(event.getGuild()
+                                                    .getTextChannels()
+                                                    .get(0));
+        } catch (NullPointerException e) {
+            System.out.println("ERROR: " + e.getMessage());
+        }
 
+        assert textChannel != null;
         textChannel.sendMessage("Hello! I am happy to be a part of this server \uD83D\uDC4B")
                     .queue();
         textChannel.sendMessage("For more information about me type \"/help\"")
@@ -26,19 +32,30 @@ public class GuildEvents extends ListenerAdapter {
 
     @Override
     public void onGuildMemberJoin(@NotNull GuildMemberJoinEvent event) {
-            String newMemberName = Objects.requireNonNull(event.getMember())
-                                                            .getAsMention();
-            String guildName = event.getGuild().getName();
-
+            String newMemberName = null;
+            try {
+                newMemberName = Objects.requireNonNull(event.getMember())
+                                                                .getAsMention();
+            } catch (NullPointerException e) {
+                System.out.println("ERROR: " + e.getMessage());
+            }
+            String guildName = event.getGuild()
+                                    .getName();
             boolean isNotBot = !(event.getMember()
                                     .getUser()
                                     .isBot());
 
             if(isNotBot) {
-                TextChannel textChannel = Objects.requireNonNull(event.getGuild()
-                                                                    .getTextChannels()
-                                                                    .get(0));
+                TextChannel textChannel = null;
+                try {
+                    textChannel = Objects.requireNonNull(event.getGuild()
+                                                            .getTextChannels()
+                                                            .get(0));
+                } catch (NullPointerException e) {
+                    System.out.println("ERROR: " + e.getMessage());
+                }
 
+                assert textChannel != null && newMemberName != null;
                 textChannel.sendMessage("Hello, " + newMemberName)
                             .queue();
                 textChannel.sendMessage("\nWelcome to " + guildName + "!")
