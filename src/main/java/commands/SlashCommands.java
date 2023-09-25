@@ -21,6 +21,7 @@ import uz.khurozov.jokeapi.dto.JokeFilter;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.net.http.HttpClient;
@@ -33,10 +34,14 @@ public class SlashCommands extends ListenerAdapter {
     @Override
     public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
         String command = event.getName();
+        // [___] -> required
+        // {___} -> optional
 
+        // --- /echo [message] {ephemeral} ---
         if (command.equals("echo")) {
             String message = Objects.requireNonNull(event.getOption("message"))
                                                         .getAsString();
+            // default -> false
             boolean ephemeral = false;
 
             try {
@@ -50,6 +55,7 @@ public class SlashCommands extends ListenerAdapter {
                     .setEphemeral(ephemeral)
                     .queue();
 
+        // --- /nasa ---
         } else if (command.equals("nasa")) {
             event.deferReply()
                     .queue();
@@ -57,63 +63,62 @@ public class SlashCommands extends ListenerAdapter {
             final String apiKey = Bot.getDotenv()
                                     .get("NASA_API_KEY");
 
-            HttpClient client = HttpClient.newHttpClient();
-            HttpRequest request = HttpRequest.newBuilder()
-                                            .uri(URI.create("https://api.nasa.gov/planetary/apod?api_key=" + apiKey))
-                                            .GET()
-                                            .build();
-
-            HttpResponse<String> response;
-            JsonNode jsonNode = null;
+            String photoUrl = null;
+            String description = null;
             try {
-                response = client.send(request, HttpResponse.BodyHandlers.ofString());
-                String responseBody = response.body();
-                ObjectMapper mapper = new ObjectMapper();
-                jsonNode = mapper.readValue(responseBody, JsonNode.class);
-            } catch (Exception e) {
+                JsonNode jsonNode = getJsonFromURL("https://api.nasa.gov/planetary/apod?api_key=" + apiKey);
+                photoUrl = jsonNode.get("url")
+                                .asText();
+                description = jsonNode.get("title")
+                                .asText();
+            } catch (IOException | InterruptedException e) {
                 System.out.println("ERROR: " + e.getMessage());
                 event.getHook()
                         .sendMessage("Error: Something went wrong")
                         .setEphemeral(true)
                         .queue();
             }
-            assert jsonNode != null;
-            String photoUrl = jsonNode.get("url")
-                                        .asText();
-            String description = jsonNode.get("title")
-                                        .asText();
 
-            //URL is deprecated, used uriObj.toURL() instead
-            URI uri;
-            URL url;
+            File photo = null;
             try {
-                uri = URI.create(photoUrl);
-                url = uri.toURL();
+                // --- URL is deprecated, used uriObj.toURL() instead ---
+                URI uri = URI.create(Objects.requireNonNull(photoUrl));
+                URL url = uri.toURL();
                 BufferedImage img = ImageIO.read(url);
-                File photo = new File("temp.jpg");
+                photo = new File("temp.jpg");
                 ImageIO.write(img, "jpg", photo);
 
                 event.getHook()
-                        .sendMessage(description)
+                        .sendMessage(Objects.requireNonNull(description))
                         .queue();
                 event.getChannel()
                         .sendFiles(FileUpload.fromData(photo))
                         .queue();
-            } catch (Exception e) {
-                System.out.println("ERROR: " + e.getMessage() + "\nCouldn't convert video to image");
+            } catch (IOException | NullPointerException e) {
+                System.out.println("ERROR: " + e.getMessage());
                 event.getHook()
                         .sendMessage("Error: Something went wrong")
                         .setEphemeral(true)
                         .queue();
+            } finally {
+                boolean success = false;
+                if (photo != null && photo.exists())
+                    success = photo.delete();
+
+                // --- it's possible for the file to be locked by another process ---
+                if(!success)
+                    System.out.println("INFO: Could not delete photo.");
             }
 
+        // --- /joke {category} {ephemeral} ---
         } else if (command.equals("joke")) {
             event.deferReply()
                     .queue();
 
+            // default -> false
             boolean ephemeral = false;
+            // default -> any
             String category = "";
-            Category type;
 
             try {
                 ephemeral = Objects.requireNonNull(event.getOption("ephemeral"))
@@ -125,6 +130,7 @@ public class SlashCommands extends ListenerAdapter {
 
             }
 
+            Category type;
             switch(category) {
                 case "DARK":
                         type = Category.Dark;
@@ -153,6 +159,7 @@ public class SlashCommands extends ListenerAdapter {
                     .setEphemeral(ephemeral)
                     .queue();
 
+        // --- /welcome ---
         } else if (command.equals("welcome")) {
             try {
                 String userMention = Objects.requireNonNull(event.getMember())
@@ -164,13 +171,16 @@ public class SlashCommands extends ListenerAdapter {
                 System.out.println("ERROR: Cannot find user");
             }
 
+        // --- /roles ---
         } else if (command.equals("roles")) {
             event.deferReply()
                     .queue();
 
+            List<Role> roleList = null;
             try {
                 StringBuilder output = new StringBuilder("Roles: \n");
-                List<Role> roleList = Objects.requireNonNull(event.getGuild()).getRoles();
+                roleList = Objects.requireNonNull(event.getGuild())
+                                                    .getRoles();
                 for (Role role : roleList)
                     output.append(role.getAsMention())
                             .append("\n");
@@ -183,16 +193,54 @@ public class SlashCommands extends ListenerAdapter {
                         .sendMessage("Error: Something went wrong")
                         .setEphemeral(true)
                         .queue();
+            } finally {
+                if(roleList != null)
+                    roleList.clear();
+            }
+
+        // --- /riddle {ephemeral} ---
+        } else if (command.equals("riddle")) {
+            event.deferReply()
+                    .queue();
+
+            //default -> false
+            boolean ephemeral = false;
+            try {
+                ephemeral = Objects.requireNonNull(event.getOption("ephemeral"))
+                                                        .getAsBoolean();
+            } catch (NullPointerException ignored) {
+                
+            }
+
+            try {
+                JsonNode jsonNode = getJsonFromURL("https://riddles-api.vercel.app/random");
+                String riddle = jsonNode.get("riddle")
+                                    .asText();
+                String answer = jsonNode.get("answer")
+                                    .asText();
+
+                event.getHook()
+                        .sendMessage(riddle)
+                        .queue();
+                event.getHook()
+                        .sendMessage("Answer: " + answer)
+                        .setEphemeral(ephemeral)
+                        .queue();
+            } catch (IOException | InterruptedException e) {
+                System.out.println("ERROR: " + e.getMessage());
+                event.getHook()
+                        .sendMessage("Error: Something went wrong")
+                        .setEphemeral(true)
+                        .queue();
             }
 
         }
     }
 
-    //Guild command
+    // --- guild commands ---
     @Override
     public void onGuildReady(@NotNull GuildReadyEvent event) {
         Guild guild = event.getGuild();
-
         guild.updateCommands().addCommands(
                             Commands.slash("echo", "Repeats the message you type.")
                                     .addOption(OptionType.STRING, "message", "The message to repeat.", true)
@@ -208,11 +256,28 @@ public class SlashCommands extends ListenerAdapter {
                                     )
                                     .addOption(OptionType.BOOLEAN, "ephemeral", "Whether or not the joke should be sent as an ephemeral message."),
                             Commands.slash("welcome", "Get a welcome message."),
-                            Commands.slash("roles", "Get a list with all the server's roles.")
+                            Commands.slash("roles", "Get a list with all the server's roles."),
+                            Commands.slash("riddle", "Get a random riddle.")
+                                    .addOption(OptionType.BOOLEAN, "ephemeral", "Whether or not the answer should be sent as an ephemeral message.")
         ).queue();
     }
 
-    ////Global command
+    // --- converts the url's content (string) to json ---
+    private static JsonNode getJsonFromURL(@NotNull String url) throws IOException, InterruptedException {
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .GET()
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        String responseBody = response.body();
+        ObjectMapper mapper = new ObjectMapper();
+
+        return mapper.readValue(responseBody, JsonNode.class);
+    }
+
+    //// --- global commands ---
 //    @Override
 //    public void onReady(@NotNull ReadyEvent event) {
 //

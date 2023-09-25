@@ -1,19 +1,15 @@
 package events;
 
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.events.message.MessageDeleteEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 public class MessageEvents extends ListenerAdapter {
-    private final Map<Long, Message> messageCache = new HashMap<>();
+//    private final Map<Long, Message> messageCache = new HashMap<>();
 
+    // --- sends a greeting when a user mentions the bot ---
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
         String[] messageSent = event.getMessage()
@@ -51,19 +47,19 @@ public class MessageEvents extends ListenerAdapter {
                 }
         }
 
-        Message message = event.getMessage();
-        messageCache.put(message.getIdLong(), message);
+//        Message message = event.getMessage();
+//        messageCache.put(message.getIdLong(), message);
     }
 
-    @Override
-    public void onMessageDelete(@NotNull MessageDeleteEvent event) {
-        long messageId = event.getMessageIdLong();
-        Message deletedMessage = messageCache.get(messageId);
-        User deletedBy = deletedMessage != null ? deletedMessage.getAuthor() : null;
-
-        if(deletedBy != null && !deletedBy.isBot())
-            event.getChannel()
-                    .sendMessage(deletedBy.getAsMention() + " deleted a message in this channel.")
-                    .queue();
-    }
+//    @Override
+//    public void onMessageDelete(@NotNull MessageDeleteEvent event) {
+//        long messageId = event.getMessageIdLong();
+//        Message deletedMessage = messageCache.get(messageId);
+//        User deletedBy = deletedMessage != null ? deletedMessage.getAuthor() : null;
+//
+//        if(deletedBy != null && !deletedBy.isBot())
+//            event.getChannel()
+//                    .sendMessage(deletedBy.getAsMention() + " deleted a message in this channel.")
+//                    .queue();
+//    }
 }
