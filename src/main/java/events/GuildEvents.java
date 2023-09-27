@@ -22,6 +22,7 @@ public class GuildEvents extends ListenerAdapter {
                     .queue();
         } catch (NullPointerException e) {
             System.out.println("ERROR: " + e.getMessage());
+            System.out.println("EXCEPTION THROWN: NullPointerException");
         }
     }
 
@@ -53,6 +54,7 @@ public class GuildEvents extends ListenerAdapter {
                             .queue();
                 } catch (NullPointerException e) {
                     System.out.println("ERROR: " + e.getMessage());
+                    System.out.println("EXCEPTION THROWN: NullPointerException");
                 }
             }
     }
@@ -73,26 +75,4 @@ public class GuildEvents extends ListenerAdapter {
                 .sendMessage(message)
                 .queue();
     }
-
-//    // --- sends the number of online users when someone updates their online status ---
-//    @Override
-//    public void onUserUpdateOnlineStatus(@NotNull UserUpdateOnlineStatusEvent event) {
-//        TextChannel textChannel = Objects.requireNonNull(event.getGuild()
-//                                                            .getTextChannels()
-//                                                            .get(0));
-//
-//        List<Member> memberList = event.getGuild()
-//                .getMembers();
-//        int onlineMembers = 0;
-//
-//        for(Member member : memberList) {
-//            boolean memberIsOnline = member.getOnlineStatus().equals(OnlineStatus.ONLINE);
-//            boolean isNotBot = !(event.getMember().getUser().isBot());
-//            if(memberIsOnline && isNotBot) {
-//                onlineMembers++;
-//            }
-//        }
-//        textChannel.sendMessage("There are " + onlineMembers + " members online!")
-//                    .queue();
-//    }
 }

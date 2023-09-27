@@ -7,8 +7,6 @@ import java.util.Arrays;
 import java.util.Objects;
 
 public class MessageEvents extends ListenerAdapter {
-//    private final Map<Long, Message> messageCache = new HashMap<>();
-
     // --- sends a greeting when a user mentions the bot ---
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
@@ -40,26 +38,13 @@ public class MessageEvents extends ListenerAdapter {
             }
         } catch (NullPointerException e) {
             System.out.println("ERROR: " + e.getMessage());
+            System.out.println("EXCEPTION THROWN: NullPointerException");
+
             if(containsGreeting && mentionsBot) {
                     event.getChannel()
                             .sendMessage("Hello!")
                             .queue();
                 }
         }
-
-//        Message message = event.getMessage();
-//        messageCache.put(message.getIdLong(), message);
     }
-
-//    @Override
-//    public void onMessageDelete(@NotNull MessageDeleteEvent event) {
-//        long messageId = event.getMessageIdLong();
-//        Message deletedMessage = messageCache.get(messageId);
-//        User deletedBy = deletedMessage != null ? deletedMessage.getAuthor() : null;
-//
-//        if(deletedBy != null && !deletedBy.isBot())
-//            event.getChannel()
-//                    .sendMessage(deletedBy.getAsMention() + " deleted a message in this channel.")
-//                    .queue();
-//    }
 }
