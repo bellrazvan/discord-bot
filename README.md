@@ -59,8 +59,8 @@ You need to rename it to `.env` and replace `YOUR_TOKEN` and `YOUR_NASA_API_KEY`
    
 2. Go to 'Applications' and then click on `New Application`
 
-  ![Screenshot_1](https://github.com/bellrazvan/discord-bot/assets/90152385/0e03e2db-3cbd-4902-a1b5-90e6addb1d64)
-  ![Screenshot_2](https://github.com/bellrazvan/discord-bot/assets/90152385/638d70f0-c778-4010-97bd-d9d3246a4909)
+    ![Screenshot_1](https://github.com/bellrazvan/discord-bot/assets/90152385/0e03e2db-3cbd-4902-a1b5-90e6addb1d64)
+    ![Screenshot_2](https://github.com/bellrazvan/discord-bot/assets/90152385/638d70f0-c778-4010-97bd-d9d3246a4909)
 
 3. Enter a name for the application
    
