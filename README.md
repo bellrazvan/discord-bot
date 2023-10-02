@@ -9,7 +9,7 @@ Other APIs and dependencies used:
 - [Dotenv](https://github.com/cdimascio/dotenv-java) (used for the environment table)
 - [JokeApi](https://github.com/khurozov/jokeapi-java) (returns a random joke)
 - [Jackson Core](https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core) (used for mapping)
-- [Nasa APOD API](https://api.nasa.gov) (APOD stands for Astronomy Photo of the Day. We'll touch on this API later)
+- [Nasa APOD API](https://api.nasa.gov) (APOD stands for Astronomy Photo of the Day. We'll touch on this API [later](https://github.com/bellrazvan/discord-bot#nasa-api-key))
 - [Riddles API](https://riddles-api.vercel.app) (returns a random riddle)
 
 ## Features
