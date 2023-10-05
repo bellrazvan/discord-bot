@@ -47,7 +47,7 @@ Currently, the bot's features are as follows:
 ## How to use
 As you can see in the repo, there is a `.env.example` file containing the following lines:
 
-```
+```.env
 TOKEN=YOUR_TOKEN
 NASA_API_KEY=YOUR_NASA_API_KEY
 ```
@@ -81,7 +81,7 @@ You need to rename it to `.env` and replace `YOUR_TOKEN` and `YOUR_NASA_API_KEY`
 7. Then copy the token and replace it with `YOUR_TOKEN` in the `.env` file
 
     For example:
-    ```
+    ```.env
     TOKEN=MTE1ODQ5NZF2Njg1NzU3MjG4NQ.GSAXIy.ByRaHxxAkdayiTB33Itli8Iwa1kaS_hU7F4m84F
     ```
     
@@ -109,7 +109,7 @@ You need to rename it to `.env` and replace `YOUR_TOKEN` and `YOUR_NASA_API_KEY`
 4. Now replace `YOUR_NASA_API_KEY` in the `.env` file with the API key you just received 
 
     For example:
-    ```
+    ```.env
     NASA_API_KEY=0fMDv2Y7ayOBSyfXIeP7TXKidn3pbrADhajDrudT
     ```
 
